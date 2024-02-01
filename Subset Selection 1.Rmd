@@ -1,0 +1,222 @@
+---
+title: "21110027_Sausan_P7"
+output: html_document
+date: "2023-12-04"
+---
+
+## Linear Model Selection
+```{r}
+#import library
+library(readxl)
+
+#read data
+acsdata <- read.csv("C:/Users/LENOVO/Documents/Analisis Prediktif/PRAK/acs2015_county_data.csv")
+
+#melihat data
+View(acsdata) 
+head(acsdata, 3)
+
+#untuk mengetahui jumlah baris dan kolom
+dim(acsdata)
+```
+
+## Preprocessing
+```{r}
+#untuk mendapatkan nama-nama kolom
+names(acsdata)
+
+#menghapus kolom-kolom yang berada di posisi 1 hingga 3
+acsdata <- acsdata[,-(1:3)]
+dim(acsdata)
+
+#untuk menghitung jumlah missing value
+sum(is.na(acsdata))
+
+#untuk mengapus baris yang mengandung missing value
+acsdata <- na.omit(acsdata)
+dim(acsdata)
+```
+
+## Best Subset Selection
+```{r}
+library(leaps)
+regfit.full <-regsubsets(Income~.,acsdata)
+result <- summary(regfit.full)
+result
+
+#secara default, regsubsets() hanya melaporkan hingga delapan model variabel terbaik
+#namun opsi "nmax" dapat digunakan untuk mengembalikan sebanyak yang diinginkan
+regfit.full<-regsubsets(Income~.,data=acsdata ,nvmax =33)
+reg.summary <- summary(regfit.full); reg.summary
+
+#untuk mendapatkan nama-nama komponen atau atribut dari objek hasil regresi subset
+names(reg.summary)
+
+#melihat nilai R square
+reg.summary$rsq
+
+#melihat nilai Adjusted R square
+reg.summary$adjr2
+
+#melihat nilai criteria of parsimony (cp)
+reg.summary$cp
+
+#melihat nilai BIC
+reg.summary$bic
+
+#maximum value of adjusted RSg
+Adj.R2 = which.max(reg.summary$adjr2)
+Adj.R2
+
+#minimum value of CP
+CP = which.min(reg.summary$cp)
+CP
+
+#minimum value of BIC
+BIC = which.min(reg.summary$bic)
+BIC
+```
+
+## Plot
+```{r}
+par(mfrow =c(1,3))
+
+#Plot of Adjusted R2
+plot(reg.summary$adjr2 ,xlab =" Number of Variables ", ylab=" Adjusted RSq", main="Adjusted R^2"
+, type="l")
+points (Adj.R2, reg.summary$adjr2[Adj.R2], col ="red",cex =2, pch =20)
+
+#Plot of Cp
+plot(reg.summary$cp ,xlab=" Number of Variables ",ylab="Cp", main="Cp", type="l")
+points (CP, reg.summary$cp[CP], col ="red",cex =2, pch =20)
+
+#Plot of BIC
+plot(reg.summary$bic ,xlab=" Number of Variables ",ylab=" BIC", main="BIC", type="l")
+points (BIC, reg.summary$bic[BIC], col =" red",cex =2, pch =20)
+```
+
+## Coef
+```{r}
+coef(regfit.full, 27, scale="adjr2")
+coef(regfit.full, 25, scale="Cp")
+coef(regfit.full, 19, scale="bic")
+```
+
+## Forward Selection
+```{r}
+regfit.fwd<-regsubsets(Income~.,data=acsdata ,nvmax =33, method ="forward")
+fwd.smry <- summary(regfit.fwd )
+fwd.smry
+
+#adjusted R^2
+fwd.smry$adjr2
+
+#Cp
+fwd.smry$cp
+
+#BIC
+fwd.smry$bic
+
+#Maximum value of Adjusted RSq
+fwd_Adj.R2 = which.max(fwd.smry$adjr2)
+fwd_Adj.R2
+
+#Minimum value of Cp
+fwd_CP = which.min(fwd.smry$cp)
+fwd_CP
+
+#Manimum value of BIC
+fwd_BIC = which.min(fwd.smry$bic)
+fwd_BIC
+```
+
+## Plot dan Coef Forward Selection
+```{r}
+par(mfrow =c(1,3))
+
+#Plot of Adjusted R2
+plot(fwd.smry$adjr2 ,xlab =" Number of Variables ", ylab=" Adjusted RSq", main="Adjusted RSq",type="l")
+points (Adj.R2, fwd.smry$adjr2[Adj.R2], col ="red",cex =2, pch =20)
+
+#Plot of Cp
+plot(fwd.smry$cp ,xlab =" Number of Variables ",ylab="Cp", main="Cp", type="l")
+points (CP, fwd.smry$cp[CP], col ="red",cex =2, pch =20)
+
+#Plot of BIC
+plot(fwd.smry$bic ,xlab=" Number of Variables ",ylab=" BIC", main="BIC", type="l")
+points (BIC, fwd.smry$bic[BIC], col =" red", cex =2, pch =20)
+
+#coef
+coef(regfit.fwd, 28, scale="adjr2")
+coef(regfit.fwd, 26, scale="Cp")
+coef(regfit.fwd, 20, scale="bic")
+```
+
+## Backward Selection
+```{r}
+regfit.bwd<-regsubsets(Income~.,data=acsdata ,nvmax =33, method ="backward")
+bwd.smry <- summary(regfit.bwd )
+bwd.smry
+
+#adjusted R^2
+bwd.smry$adjr2
+
+#Cp
+bwd.smry$cp
+
+#BIC
+bwd.smry$bic
+
+#Maximum value of Adjusted RSq
+bwd_Adj.R2 = which.max(bwd.smry$adjr2)
+bwd_Adj.R2
+
+#Minimum value of Cp
+bwd_CP = which.min(bwd.smry$cp)
+bwd_CP
+
+#Manimum value of BIC
+bwd_BIC = which.min(bwd.smry$bic)
+bwd_BIC
+```
+
+## Plot dan Coef Backward Selection
+```{r}
+par(mfrow =c(1,3))
+
+#Plot of Adjusted R2
+plot(bwd.smry$adjr2 ,xlab =" Number of Variables ", ylab=" Adjusted RSq", main="Adjusted RSq",type="l")
+points (Adj.R2, bwd.smry$adjr2[Adj.R2], col ="red",cex =2, pch =20)
+
+#Plot of Cp
+plot(bwd.smry$cp ,xlab =" Number of Variables ",ylab="Cp", main="Cp", type="l")
+points (CP, bwd.smry$cp[CP], col ="red",cex =2, pch =20)
+
+#Plot of BIC
+plot(bwd.smry$bic ,xlab=" Number of Variables ",ylab=" BIC", main="BIC", type="l")
+points (BIC, bwd.smry$bic[BIC], col =" red", cex =2, pch =20)
+
+#coef
+coef(regfit.bwd, 27, scale="adjr2")
+coef(regfit.bwd, 26, scale="Cp")
+coef(regfit.bwd, 25, scale="bic")
+```
+
+## Conclusion
+```{r}
+#install.packages("data.table")
+
+#Load paket
+library(data.table)
+
+#Membuat data.table
+my_table <- data.table(
+  Criterion = c("AdjRsq", "Cp", "BIC"),
+  Stepwise = c(27, 25, 19),
+  Forward = c(28, 26, 20),
+  Backward = c(27, 26, 25)
+)
+
+#Menampilkan tabel
+print(my_table)
+```

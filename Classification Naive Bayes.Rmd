@@ -1,0 +1,104 @@
+---
+title: "21110027_Sausan_P11"
+author: "Sausan"
+output: html_document
+date: "2023-12-18"
+---
+
+## Read Data
+```{r}
+titanic = read.csv("C:/Users/LENOVO/Documents/Analisis Prediktif/PRAK/titanic.csv")
+head(titanic)
+```
+
+## Preprocessing
+Pilih kolom yang diperlukan
+```{r}
+titanic = titanic[, c(2,3,5,6,7,8,10,12)]
+```
+Hapus NA
+```{r}
+titanic = na.omit(titanic)
+
+#Ubah variabel faktor menjadi tipe yang benar
+titanic$Survived = as.factor(titanic$Survived)
+titanic$Pclass = as.factor(titanic$Pclass)
+```
+
+Ubah variabel faktor menjadi tipe yang benar
+```{r}
+titanic$Survived = as.factor(titanic$Survived)
+titanic$Pclass = as.factor(titanic$Pclass)
+```
+
+## Deskripsi dataset Titanic
+```{r}
+str(titanic)
+```
+
+## Training dan Testing
+```{r}
+library(caret)
+set.seed(20180430)
+train.ind = createDataPartition(titanic$Survived, p=2/3, list=F)
+train = titanic[train.ind, ]
+test = titanic[-train.ind, ]
+dim(train) ; dim(test)
+```
+## Parametric Classification Models 
+## Naive Bayes
+#Melatih Klasifikasi NB Menggunakan Paket e1071
+```{r}
+library(e1071)
+model.nb = naiveBayes(Survived ~ ., train)
+model.nb
+```
+Menggunakan predict() untuk mendapatkan hasil prediksi.
+```{r}
+predict(model.nb, test)
+```
+```{r}
+table(predict(model.nb, test) == test$Survived)/length(test$Survived)
+```
+Akurasi dari model klasifikasi naive Bayes adalah 79%.
+
+## Logistic Regression
+Selaraskan model logistik dengan satu variabel Pclass
+```{r}
+model.lr.pclass = glm(Survived~Pclass, data=train, family="binomial")
+model.lr.pclass
+```
+```{r}
+summary(model.lr.pclass)
+```
+Fungsi fit() menghasilkan skor numerik: w0 + w1x
+```{r}
+predict(model.lr.pclass, test)
+```
+
+Meneruskan nilai di atas ke fungsi sigmoid dapat dilakukan menggunakan parameter type=“response” untuk mendapatkan probabilitasnya.
+```{r}
+predict(model.lr.pclass, test, type="response")
+```
+Menetapkan ambang batas (threshold) untuk mengubah probabilitas ini menjadi label kelas. Sebagai contoh, menetapkan 0.5 sebagai ambang batas.
+```{r}
+p = predict(model.lr.pclass, test, type="response")
+labels = ifelse(p > 0.5, "1", "0")
+labels
+```
+```{r}
+table(labels == test$Survived)/length(test$Survived)
+```
+
+Akurasi dari model regresi logistik hanya menggunakan Pclass adalah 67%. Melatih model regresi logistik untuk memprediksi variabel “Survived” dengan menggunakan semua fitur.
+```{r}
+model.lr = glm(Survived ~ ., data=train, family="binomial")
+model.lr
+```
+Menetapkan ambang batas (threshold) untuk mengubah probabilitas ini menjadi label kelas.
+```{r}
+p = predict(model.lr, test, type="response")
+labels = ifelse(p > 0.5, "1", "0")
+table(labels == test$Survived)/length(test$Survived)
+```
+Akurasi model regresi logistik sebesar 79,7% dimana lebih baik daripada hanya menggunakan Pclass saja.
