@@ -1,0 +1,93 @@
+---
+title: "21110027_Sausan_P12"
+author: "Sausan"
+date: "2024-01-08"
+output: html_document
+---
+
+# Library
+```{r}
+library(readxl) #untuk membaca file excel 
+library(plotrix) #untuk membentuk pie chart
+library(car) #untuk menghitung VIF masing2 prediktor
+```
+
+# Memanggil data dan membuat dataframe
+```{r}
+data <- read_excel("C:/Users/LENOVO/Documents/Analisis Prediktif/PRAK/survey lung cancer dataset praktikum.xlsx")
+View(data) 
+```
+
+```{r}
+X1 = as.factor(data$GENDER)
+X2 = data$AGE
+X3 = as.factor(data$SMOKING)
+X4 = as.factor(data$ALCOHOL_CONSUMING)
+X5 = as.factor(data$COUGHING)
+X6 = as.factor(data$SWALLOWING_DIFFICULTY)
+X7 = as.factor(data$CHEST_PAIN)
+Y = as.factor(data$LUNG_CANCER)
+df = data.frame(X1, X2, X3, X4, X5, X6, X7, Y)
+```
+
+# Pie Chart Proporsi Pasien
+```{r}
+CANCER = table(df$Y)
+CANCER
+
+kat = c("Negatif = ","Positif = ")
+persentase = round(CANCER/sum(CANCER)*100)
+kat = paste(kat,persentase)
+kat = paste(kat,'%',sep='')
+pie3D(CANCER, labels = kat, col = c('light blue', 'blue'),
+      main = "Persentase Kanker Paru-Paru")
+```
+
+Dari diagram pie, 87% pasien diperkirakan positif terhadap kanker paru-paru, sementara 13% diperkirakan negatif.
+
+# Histogram Hasil Tes Kanker Berdasarkan Jenis Kelamin
+```{r}
+counts = table(data$LUNG_CANCER,data$GENDER)
+barplot(counts, main="Sebaran Hasil Tes Kanker Berdasarkan Jenis Kelamin",
+        xlab=" ", col=c("black","grey"),legend=rownames(counts), beside=TRUE)
+```
+
+Histogram menunjukkan bahwa pada jenis kelamin tertentu (pria atau wanita), kategori "Yes" (kemungkinan hasil tes positif) memiliki jumlah yang lebih banyak daripada kategori "No" (kemungkinan hasil tes negatif).
+
+# Analisis Regresi Logistik
+```{r}
+model = glm(Y ~ X1+X2+X3+X4+X5+X6+X7, data = data, family = binomial)
+summary(model)
+```
+X1M memiliki p-value sekitar 0.048, menunjukkan signifikansi pada tingkat 0.05.
+X32, X42, X52, dan X62 memiliki p-value yang sangat kecil, menunjukkan signifikansi yang tinggi.
+
+```{r}
+beta = coef(model)
+OR = exp(beta)
+SK = exp(confint(model))
+
+cbind(beta, OR, SK)
+```
+# Hasil Varians Inflasi Faktor (VIF)
+```{r}
+vif(model)
+```
+# Interpretasi:
+
+#### Koefisien Model: 
+- Intercept menunjukkan nilai log odds ketika semua prediktor adalah nol.
+- Koefisien negatif pada X1M menunjukkan bahwa pria (X1M = 1) memiliki log odds yang lebih rendah daripada wanita (X1M = 0) dalam pengembangan kanker paru-paru.
+- Koefisien positif pada variabel lain menunjukkan peningkatan log odds untuk kategori tertentu dari variabel tersebut.
+
+#### Signifikansi Statistik:
+- Pada tingkat signifikansi 0.05, X1M, X32, X42, X52, dan X62 terlihat signifikan.
+
+#### Varians Inflasi Faktor (VIF):
+- Semua VIF kurang dari 5, yang menunjukkan tidak ada masalah multicollinearity yang signifikan.
+
+#### Model Fit:
+- Deviance yang lebih rendah dan AIC yang lebih kecil menunjukkan bahwa model ini mungkin memiliki kesesuaian yang baik dengan data.
+
+#### Odds Ratio (OR):
+- OR mengukur perubahan dalam odds kategori tertentu dibandingkan dengan referensi. Sebagai contoh, OR untuk X1M adalah sekitar 0.379, yang berarti pria memiliki odds 0.379 kali dari wanita dalam pengembangan kanker paru-paru.
